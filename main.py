@@ -12,11 +12,15 @@ def status():
     else:
       print(bcolors.FAIL + file["name"] + bcolors.ENDC)
       
-def add_files():
-  pass
+def add_files(data_input):
+  data = load_data()
+  if data_input["path"] not in [file["path"] for file in data["savedFiles"]]:
+    data["savedFiles"].append(data_input)
+    update_data(data)
+  print()
+
 
 def add_all_files():
-  # fali logika za .ignore file
   data = load_data()
   data["savedFiles"] = get_files(main_dir)
   data["savedFiles"] = list(map(lambda file : { "path": file["path"], "name": file["name"] }, data["savedFiles"]))
@@ -54,5 +58,4 @@ def main():
         add_all_files()
       else:
         add_files()
-    
 main()
