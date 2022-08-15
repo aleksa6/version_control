@@ -2,7 +2,7 @@ import os
 import sys
 import shutil
 
-from util import isInitialized, load_data, update_data, get_files, get_new_files, validate_args
+from util import isInitialized, load_data, update_data, get_files, get_new_files, validate_args, format_file_data
 from variables import bcolors, main_dir, vcs_path, data_dir  
   
 def status():
@@ -33,7 +33,7 @@ def init():
     reinit = True
       
   os.mkdir(vcs_path)
-  os.mkdir(os.path.join(vcs_path, "snapshots"))
+  os.makedirs(os.path.join(vcs_path, "branches", "main", "commits"))
   os.mkdir(os.path.join(vcs_path, "data"))
   open(os.path.join(vcs_path, "data", "data.json"), "x")
   
@@ -42,17 +42,18 @@ def init():
 
 def main():
     args = sys.argv
+    cmd = args[1]
     
     if args[1] is None: help()
     elif not isInitialized and args[1] != "init": print("Project doesn't exists")
     elif args[1] == "init": init()
     elif args[1] == "status": status()
     elif args[1] == "add":
-      args = sys.argv
       validate_args(args[2:])
+      args = [format_file_data(file) for file in args[2:]]
       if args[2] == ".":
         add_all_files()
-      else:
-        add_files()
+      else:        
+        add_files(args)
     
 main()

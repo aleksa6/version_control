@@ -15,25 +15,28 @@ def load_data():
 def update_data(data):
   with open(os.path.join(data_dir, "data.json"), "w") as f:
     f.write(json.dumps(data))
-        
+    
+pathsToIgnore = [ file for file in os.listdir(main_dir) ]
   
 def get_files(directory):
-    if len(os.listdir(main_dir)) == 0: return []
+  if len(os.listdir(main_dir)) == 0: return []
+  
+  data = load_data()
+  files = []
+  for path in os.listdir(directory):
+    if (path in pathsToIgnore): continue
     
-    data = load_data()
-    files = []
-    for path in os.listdir(directory):
-        isHidden = path.startswith(".")
-        name = path
-        path = os.path.join(directory, path)
-        
-        if os.path.isfile(path):
-            isSaved = path in [file["path"] for file in data["savedFiles"]]
-            files.append({ "path": path, "name": name, "isSaved": isSaved })
-        elif not isHidden:
-            files.extend(get_files(path))
-            
-    return files
+    isHidden = path.startswith(".")
+    name = path
+    path = os.path.join(directory, path)
+    
+    if os.path.isfile(path):
+      isSaved = path in [file["path"] for file in data["savedFiles"]]
+      files.append({ "path": path, "name": name, "isSaved": isSaved })
+    elif not isHidden:
+      files.extend(get_files(path))
+          
+  return files
 
 def get_new_files(directory):
   data = load_data()
@@ -42,6 +45,11 @@ def get_new_files(directory):
     if file["path"] not in [file["path"] for file in data["savedFiles"]]:
       files.append(file)
   return files
+
+def format_file_data(path):
+  absolutePath = os.path.join(main_dir, path)
+  file = { "path": absolutePath, "name": os.path.basename(absolutePath)}
+  return file
 
 def validate_args(args):
   if args[0] == ".": return True
