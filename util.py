@@ -3,14 +3,14 @@ import json
 
 from variables import main_dir, data_dir, paths_to_ignore
   
-isInitialized = os.path.exists(os.path.join(data_dir, "data.json"))
+is_initialized = os.path.exists(os.path.join(data_dir, "data.json"))
 
 def load_data():
   with open(os.path.join(data_dir, "data.json"), "r") as f:
     try :
       return json.load(f)
     except:
-      return { "savedFiles": [] }
+      return { "saved_files": [] }
 
 def update_data(data):
   with open(os.path.join(data_dir, "data.json"), "w") as f:
@@ -29,7 +29,7 @@ def get_files(directory):
     path = os.path.join(directory, path)
     
     if os.path.isfile(path):
-      isSaved = path in [file["path"] for file in data["savedFiles"]]
+      isSaved = path in [file["path"] for file in data["saved_files"]]
       relative_path = os.path.relpath(path)
       files.append({ "path": path, "relative_path": relative_path, "name": name, "isSaved": isSaved })
     elif not isHidden:
@@ -43,7 +43,7 @@ def get_new_files(directory):
   for file in get_files(directory):
     if file["path"] in paths_to_ignore: continue
     
-    if file["path"] not in [file["path"] for file in data["savedFiles"]]:
+    if file["path"] not in [file["path"] for file in data["saved_files"]]:
       files.append(file)
   return files
 

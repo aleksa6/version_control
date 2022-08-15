@@ -1,8 +1,9 @@
 import os
 import sys
 import shutil
+from turtle import update
 
-from util import isInitialized, load_data, update_data, get_files, get_new_files, validate_args, format_file_data
+from util import is_initialized, load_data, update_data, get_files, get_new_files, validate_args, format_file_data
 from variables import bcolors, main_dir, vcs_path, paths_to_ignore  
   
 def status():
@@ -10,23 +11,29 @@ def status():
       
 def add_files(files):
   data = load_data()
-  filePaths = [file["path"] for file in data["savedFiles"]]
+  file_paths = [file["path"] for file in data["saved_files"]]
   for file in files:
-    if file["path"] not in filePaths and file["path"] not in paths_to_ignore:
-      print(file)
-      data["savedFiles"].append(file)
+    if file["path"] not in file_paths and file["path"] not in paths_to_ignore:
+      data["saved_files"].append(file)
       update_data(data)
 
 
 def add_all_files():
   data = load_data()
-  data["savedFiles"] = get_files(main_dir)
-  data["savedFiles"] = list(map(lambda file : { "path": file["path"], "relative_path": file["relative_path"], "name": file["name"] }, data["savedFiles"]))
+  data["saved_files"] = get_files(main_dir)
+  data["saved_files"] = list(map(lambda file : { "path": file["path"], "relative_path": file["relative_path"], "name": file["name"] }, data["saved_files"]))
   update_data(data)
   
 def help():
   pass
 
+def branch(name):
+  # os.makedirs(os.path.join(main_dir, "vcs", "branches", name))
+  branches = os.listdir(os.path.join(main_dir, "vcs", "branches"))
+  if name not in branches:
+    data = load_data()
+    data["info"]["branches"].append(name)
+    
 def init():
   reinit = False
   
@@ -39,6 +46,10 @@ def init():
   os.mkdir(os.path.join(vcs_path, "data"))
   open(os.path.join(vcs_path, "data", "data.json"), "x")
   
+  data = load_data()
+  data = { "saved_files": [], "info": { "branches": ["main"] } }
+  update_data(data)
+  
   if reinit: print("Project reinitialized") 
   else: print("Project initialized")
 
@@ -46,16 +57,21 @@ def main():
   args = sys.argv
   cmd = args[1]
   
-  if args[1] is None: help()
-  elif not isInitialized and args[1] != "init": print("Project doesn't exist yet")
-  elif args[1] == "init": init()
-  elif args[1] == "status": status()
-  elif args[1] == "add":
+  if cmd is None: help()
+  elif not is_initialized and cmd != "init": print("Project doesn't exist yet")
+  elif cmd == "init": init()
+  elif cmd == "status": status()
+  elif cmd == "add":
     validate_args(args[2:])
     if args[2] == ".":
       add_all_files()
     else:        
       args = [format_file_data(file) for file in args[2:]]
       add_files(args)
+  elif cmd == "branch":
+    if len(args) < 3:
+      branch("test")
 
 main()
+
+# filter(lambda x )
