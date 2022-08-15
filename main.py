@@ -37,8 +37,6 @@ def init():
   os.mkdir(os.path.join(vcs_path, "data"))
   open(os.path.join(vcs_path, "data", "data.json"), "x")
   
-  ctypes.windll.kernel32.SetFileAttributesW(os.path.join(main_dir, "__pycache__"), 2)
-      
   if reinit: print("Project reinitialized") 
   else: print("Project initialized")
 
