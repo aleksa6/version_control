@@ -7,7 +7,6 @@ main_dir = os.getcwd()
 vcs_path = os.path.join(main_dir, "vcs")
 data_dir = os.path.join(main_dir, "vcs", "data")
 
-
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -58,13 +57,22 @@ def getNewFiles(directory):
     if file["path"] not in [file["path"] for file in data["savedFiles"]]:
       files.append(file)
   return files
+
+def validateArgs(args):
+  pass
   
 def status():
-    for file in sorted(getFiles(main_dir), key=lambda file: file["isSaved"], reverse=True):
-        if file["isSaved"]:
-            print(bcolors.OKGREEN + file["name"] + bcolors.ENDC)
-        else:
-            print(bcolors.FAIL + file["name"] + bcolors.ENDC)
+  for file in sorted(getFiles(main_dir), key=lambda file: file["isSaved"], reverse=True):
+    if file["isSaved"]:
+      print(bcolors.OKGREEN + file["name"] + bcolors.ENDC)
+    else:
+      print(bcolors.FAIL + file["name"] + bcolors.ENDC)
+      
+def addFiles():
+  pass
+
+def addAllFiles():
+  pass
 
 def init():
   reinit = False
@@ -78,10 +86,10 @@ def init():
   os.mkdir(os.path.join(vcs_path, "data"))
   open(os.path.join(vcs_path, "data", "data.json"), "x")
       
-  data = loadData()
-  data["savedFiles"] = getFiles(main_dir)
-  data["savedFiles"] = list(map(lambda file : { "path": file["path"], "name": file["name"] }, data["savedFiles"]))
-  updateData(data)
+  # data = loadData()
+  # data["savedFiles"] = getFiles(main_dir)
+  # data["savedFiles"] = list(map(lambda file : { "path": file["path"], "name": file["name"] }, data["savedFiles"]))
+  # updateData(data)
       
   if reinit: print("Project reinitialized") 
   else: print("Project initialized")
@@ -92,5 +100,13 @@ def main():
     if not isInitialized and arg != "init": print("Project doesn't exists")
     elif arg == "init": init()
     elif arg == "status": status()
+    elif arg == "add":
+      args = sys.argv()
+      validateArgs(args[1:])
+      if args[1] == ".":
+        addAllFiles()
+      else:
+        addFiles()
+    
     
 main()
