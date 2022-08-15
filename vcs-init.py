@@ -20,22 +20,22 @@ class bcolors:
     
 isInitialized = os.path.exists(os.path.join(data_dir, "data.json"))
 
-def loadData():
+def load_data():
   with open(os.path.join(data_dir, "data.json"), "r") as f:
     try :
       return json.load(f)
     except:
       return { "savedFiles": [] }
 
-def updateData(data):
+def update_data(data):
   with open(os.path.join(data_dir, "data.json"), "w") as f:
     f.write(json.dumps(data))
         
   
-def getFiles(directory):
+def get_files(directory):
     if len(os.listdir(main_dir)) == 0: return []
     
-    data = loadData()
+    data = load_data()
     files = []
     for path in os.listdir(directory):
         isHidden = path.startswith(".")
@@ -46,32 +46,46 @@ def getFiles(directory):
             isSaved = path in [file["path"] for file in data["savedFiles"]]
             files.append({ "path": path, "name": name, "isSaved": isSaved })
         elif not isHidden:
-            files.extend(getFiles(path))
+            files.extend(get_files(path))
             
     return files
 
-def getNewFiles(directory):
-  data = loadData()
+def get_new_files(directory):
+  data = load_data()
   files = []
-  for file in getFiles(directory):
+  for file in get_files(directory):
     if file["path"] not in [file["path"] for file in data["savedFiles"]]:
       files.append(file)
   return files
 
-def validateArgs(args):
-  pass
+def validate_args(args):
+  if args[0] == ".": return True
+  
+  for relativePath in args:
+    absolutePath = os.path.join(main_dir, relativePath)
+    if not (os.path.exists(absolutePath) and os.path.isfile(absolutePath)):
+      return False
+
+  return True
   
 def status():
-  for file in sorted(getFiles(main_dir), key=lambda file: file["isSaved"], reverse=True):
+  for file in sorted(get_files(main_dir), key=lambda file: file["isSaved"], reverse=True):
     if file["isSaved"]:
       print(bcolors.OKGREEN + file["name"] + bcolors.ENDC)
     else:
       print(bcolors.FAIL + file["name"] + bcolors.ENDC)
       
-def addFiles():
+def add_files():
   pass
 
-def addAllFiles():
+def add_all_files():
+  # fali logika za .ignore file
+  data = load_data()
+  data["savedFiles"] = get_files(main_dir)
+  data["savedFiles"] = list(map(lambda file : { "path": file["path"], "name": file["name"] }, data["savedFiles"]))
+  update_data(data)
+  
+def help():
   pass
 
 def init():
@@ -86,27 +100,22 @@ def init():
   os.mkdir(os.path.join(vcs_path, "data"))
   open(os.path.join(vcs_path, "data", "data.json"), "x")
       
-  # data = loadData()
-  # data["savedFiles"] = getFiles(main_dir)
-  # data["savedFiles"] = list(map(lambda file : { "path": file["path"], "name": file["name"] }, data["savedFiles"]))
-  # updateData(data)
-      
   if reinit: print("Project reinitialized") 
   else: print("Project initialized")
 
 def main():
-    arg = sys.argv[1]
+    args = sys.argv
     
-    if not isInitialized and arg != "init": print("Project doesn't exists")
-    elif arg == "init": init()
-    elif arg == "status": status()
-    elif arg == "add":
-      args = sys.argv()
-      validateArgs(args[1:])
-      if args[1] == ".":
-        addAllFiles()
+    if args[1] is None: help()
+    elif not isInitialized and args[1] != "init": print("Project doesn't exists")
+    elif args[1] == "init": init()
+    elif args[1] == "status": status()
+    elif args[1] == "add":
+      args = sys.argv
+      validate_args(args[2:])
+      if args[2] == ".":
+        add_all_files()
       else:
-        addFiles()
-    
+        add_files()
     
 main()
