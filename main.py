@@ -6,18 +6,15 @@ from util import isInitialized, load_data, update_data, get_files, get_new_files
 from variables import bcolors, main_dir, vcs_path, data_dir  
   
 def status():
-  for file in sorted(get_files(main_dir), key=lambda file: file["isSaved"], reverse=True):
-    if file["isSaved"]:
-      print(bcolors.OKGREEN + file["name"] + bcolors.ENDC)
-    else:
-      print(bcolors.FAIL + file["name"] + bcolors.ENDC)
+  pass
       
-def add_files(data_input):
+def add_files(files):
   data = load_data()
-  if data_input["path"] not in [file["path"] for file in data["savedFiles"]]:
-    data["savedFiles"].append(data_input)
-    update_data(data)
-  print()
+  filePaths = [file["path"] for file in data["savedFiles"]]
+  for file in files:
+    if file["path"] not in filePaths:
+      data["savedFiles"].append(file)
+      update_data(data)
 
 
 def add_all_files():
@@ -45,19 +42,19 @@ def init():
   else: print("Project initialized")
 
 def main():
-    args = sys.argv
-    cmd = args[1]
-    
-    if args[1] is None: help()
-    elif not isInitialized and args[1] != "init": print("Project doesn't exists")
-    elif args[1] == "init": init()
-    elif args[1] == "status": status()
-    elif args[1] == "add":
-      validate_args(args[2:])
+  args = sys.argv
+  cmd = args[1]
+  
+  if args[1] is None: help()
+  elif not isInitialized and args[1] != "init": print("Project doesn't exists")
+  elif args[1] == "init": init()
+  elif args[1] == "status": status()
+  elif args[1] == "add":
+    validate_args(args[2:])
+    if args[2] == ".":
+      add_all_files()
+    else:        
       args = [format_file_data(file) for file in args[2:]]
-      if args[2] == ".":
-        add_all_files()
-      else:        
-        add_files(args)
+      add_files(args)
 
 main()

@@ -24,7 +24,7 @@ def get_files(directory):
   data = load_data()
   files = []
   for path in os.listdir(directory):
-    if (path in pathsToIgnore): continue
+    if path in pathsToIgnore: continue
     
     isHidden = path.startswith(".")
     name = path
@@ -42,6 +42,8 @@ def get_new_files(directory):
   data = load_data()
   files = []
   for file in get_files(directory):
+    if file["path"] in pathsToIgnore: continue
+    
     if file["path"] not in [file["path"] for file in data["savedFiles"]]:
       files.append(file)
   return files
