@@ -3,7 +3,7 @@ import sys
 import shutil
 
 from util import isInitialized, load_data, update_data, get_files, get_new_files, validate_args, format_file_data
-from variables import bcolors, main_dir, vcs_path, data_dir  
+from variables import bcolors, main_dir, vcs_path, paths_to_ignore  
   
 def status():
   pass
@@ -12,7 +12,8 @@ def add_files(files):
   data = load_data()
   filePaths = [file["path"] for file in data["savedFiles"]]
   for file in files:
-    if file["path"] not in filePaths:
+    if file["path"] not in filePaths and file["path"] not in paths_to_ignore:
+      print(file)
       data["savedFiles"].append(file)
       update_data(data)
 
@@ -20,7 +21,7 @@ def add_files(files):
 def add_all_files():
   data = load_data()
   data["savedFiles"] = get_files(main_dir)
-  data["savedFiles"] = list(map(lambda file : { "path": file["path"], "name": file["name"] }, data["savedFiles"]))
+  data["savedFiles"] = list(map(lambda file : { "path": file["path"], "relative_path": file["relative_path"], "name": file["name"] }, data["savedFiles"]))
   update_data(data)
   
 def help():
@@ -46,7 +47,7 @@ def main():
   cmd = args[1]
   
   if args[1] is None: help()
-  elif not isInitialized and args[1] != "init": print("Project doesn't exists")
+  elif not isInitialized and args[1] != "init": print("Project doesn't exist yet")
   elif args[1] == "init": init()
   elif args[1] == "status": status()
   elif args[1] == "add":

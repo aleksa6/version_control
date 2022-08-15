@@ -14,3 +14,13 @@ class bcolors:
   ENDC = '\033[0m'
   BOLD = '\033[1m'
   UNDERLINE = '\033[4m'    
+
+paths_to_ignore = [
+  os.path.join(main_dir, "vcs"),
+  os.path.join(main_dir, "__pycache__"),
+  os.path.join(main_dir, ".gitignore"),
+  os.path.join(main_dir, "main.py"),
+  os.path.join(main_dir, "util.py"),
+  os.path.join(main_dir, "variables.py"),
+  os.path.join(main_dir, "vcs.docx"),
+]

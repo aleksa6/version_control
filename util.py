@@ -1,7 +1,7 @@
 import os
 import json
 
-from variables import main_dir, data_dir
+from variables import main_dir, data_dir, paths_to_ignore
   
 isInitialized = os.path.exists(os.path.join(data_dir, "data.json"))
 
@@ -15,24 +15,23 @@ def load_data():
 def update_data(data):
   with open(os.path.join(data_dir, "data.json"), "w") as f:
     f.write(json.dumps(data))
-    
-pathsToIgnore = [ file for file in os.listdir(main_dir) ]
   
 def get_files(directory):
   if len(os.listdir(main_dir)) == 0: return []
   
   data = load_data()
   files = []
-  for path in os.listdir(directory):
-    if path in pathsToIgnore: continue
-    
+  for path in os.listdir(directory):    
     isHidden = path.startswith(".")
+    if os.path.join(directory, path) in paths_to_ignore or isHidden: continue
+
     name = path
     path = os.path.join(directory, path)
     
     if os.path.isfile(path):
       isSaved = path in [file["path"] for file in data["savedFiles"]]
-      files.append({ "path": path, "name": name, "isSaved": isSaved })
+      relative_path = os.path.relpath(path)
+      files.append({ "path": path, "relative_path": relative_path, "name": name, "isSaved": isSaved })
     elif not isHidden:
       files.extend(get_files(path))
           
@@ -42,23 +41,24 @@ def get_new_files(directory):
   data = load_data()
   files = []
   for file in get_files(directory):
-    if file["path"] in pathsToIgnore: continue
+    if file["path"] in paths_to_ignore: continue
     
     if file["path"] not in [file["path"] for file in data["savedFiles"]]:
       files.append(file)
   return files
 
 def format_file_data(path):
-  absolutePath = os.path.join(main_dir, path)
-  file = { "path": absolutePath, "name": os.path.basename(absolutePath)}
+  absolute_path = os.path.join(main_dir, path)
+  relative_path = os.path.relpath(path)
+  file = { "path": absolute_path, "relative_path": relative_path, "name": os.path.basename(absolute_path)}
   return file
 
 def validate_args(args):
   if args[0] == ".": return True
   
   for relativePath in args:
-    absolutePath = os.path.join(main_dir, relativePath)
-    if not (os.path.exists(absolutePath) and os.path.isfile(absolutePath)):
+    absolute_path = os.path.join(main_dir, relativePath)
+    if not (os.path.exists(absolute_path) and os.path.isfile(absolute_path)):
       return False
 
   return True
