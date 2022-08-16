@@ -11,20 +11,29 @@ def status():
   data = load_data()
   branch = data["info"]["current_branch"]
   
-  commit = data["info"]["branches"][branch]["commits"][-1]
-  commons = [file["name"] for file in commit["files"]]
+  commits = data["info"]["branches"][branch]["commits"]
+
+  if len(commits) < 1:
+    for file in data["saved_files"]:
+      print(bcolors.OKGREEN + "new file:         " + file["name"] + bcolors.ENDC)
+    for file in get_files(main_dir):
+      if file["path"] not in [file["path"] for file in data["saved_files"]]:
+        print(bcolors.FAIL + "untracked:        " + file["name"] + bcolors.ENDC)
+    return
+  
+  commons = [file["name"] for file in commits[-1]["files"]]
   
   for file in get_files(main_dir):
     if file["name"] not in commons:
       if file["path"] in [data["path"] for data in data["saved_files"]]:
-        print(bcolors.OKGREEN + "new file:        " + file["name"] + bcolors.ENDC)
+        print(bcolors.OKGREEN + "new file:         " + file["name"] + bcolors.ENDC)
       else:
         print(bcolors.FAIL + "untracked:        " + file["name"] + bcolors.ENDC)
   
-  match, missmatch, errors = filecmp.cmpfiles(main_dir, commit["path"], commons)
+  match, missmatch, errors = filecmp.cmpfiles(main_dir, commits[-1]["path"], commons)
 
   for filename in match:
-    print(bcolors.OKGREEN + "up to date:    " + file["name"] + bcolors.ENDC)
+    print(bcolors.OKGREEN + "up to date:       " + file["name"] + bcolors.ENDC)
   for filename in missmatch:
     print(bcolors.FAIL + "modified:         " + filename + bcolors.ENDC)
   for filename in errors:
