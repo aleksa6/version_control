@@ -98,26 +98,29 @@ def merge(b1, b2 = "main"):
     file = b1commits[-1]["files"][i]
     if file["real_path"] in [file["real_path"] for file in b2commits[-1]["files"]]:
       rand = random.randint(0, 2)
-      if rand == 0:
-        commons.append([x for x in b2commits[-1]["files"] if x["real_path"] == file["real_path"]][0])  
+      file1 = [x for x in b2commits[-1]["files"] if x["real_path"] == file["real_path"]][0]
+      file2 = [x for x in b1commits[-1]["files"] if x["real_path"] == file["real_path"]][0]
+      if os.path.getsize(file1["copy_path"]) > os.path.getsize(file2["copy_path"]):
+        commons.append(file1)  
       else:
-        commons.append([x for x in b1commits[-1]["files"] if x["real_path"] == file["real_path"]][0])  
+        commons.append(file2)  
 
   for file in commons:
-    if not os.path.exists(file["real_path"]):
-      os.makedirs(os.path.join(main_dir, file["rel_path"][:file["rel_path"].rfind("\\") + 1]))
+    dirr = file["real_path"][:(file["real_path"].rfind("\\") + 1) or len(file["real_path"])]
+    if not os.path.exists(dirr):
+      os.makedirs(dirr)
     shutil.copyfile(file["copy_path"], file["real_path"])
 
   for file in b1commits[-1]["files"]:
     if file["real_path"] not in [file["real_path"] for file in commons]:
-      dirr = file["real_path"][:file["real_path"].rfind("\\") + 1]
+      dirr = file["real_path"][:(file["real_path"].rfind("\\") + 1) or len(file["real_path"])]
       if not os.path.exists(dirr):
         os.makedirs(dirr)
       shutil.copyfile(file["copy_path"], file["real_path"])
 
   for file in b2commits[-1]["files"]:
     if file["real_path"] not in [file["real_path"] for file in commons]:
-      dirr = file["real_path"][:file["real_path"].rfind("\\") + 1]
+      dirr = file["real_path"][:(file["real_path"].rfind("\\") + 1) or len(file["real_path"])]
       if not os.path.exists(dirr):
         os.makedirs(dirr)
       shutil.copyfile(file["copy_path"], file["real_path"])

@@ -22,5 +22,6 @@ paths_to_ignore = [
   os.path.join(main_dir, "main.py"),
   os.path.join(main_dir, "util.py"),
   os.path.join(main_dir, "variables.py"),
+  os.path.join(main_dir, "commit.py"),
   os.path.join(main_dir, "vcs.docx"),
 ]

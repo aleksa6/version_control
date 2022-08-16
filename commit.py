@@ -23,7 +23,7 @@ def commit(name):
     if not os.path.exists(file["path"]): continue
     
     copy_path = os.path.join(commit, file["relative_path"])
-    dirr = copy_path[:copy_path.rfind("\\") + 1]
+    dirr = copy_path[:(copy_path.rfind("\\") + 1) or len(copy_path)]
     
     if not os.path.exists(dirr):
       os.makedirs(dirr)
