@@ -1,21 +1,30 @@
+from distutils.log import error
+from email.errors import MissingHeaderBodySeparatorDefect
 import os
 import sys
 import shutil
-from turtle import update
+import filecmp
 
 from util import is_initialized, load_data, update_data, get_files, get_new_files, validate_args, format_file_data
 from variables import bcolors, main_dir, vcs_path, paths_to_ignore  
+from commit import commit
   
 def status():
+  data = load_data()
+  
+  commit = data["info"]["commits"][-1]
+  commons = [file for file in commit["files"]]
   pass
-      
+
 def add_files(files):
   data = load_data()
   file_paths = [file["path"] for file in data["saved_files"]]
   for file in files:
-    if file["path"] not in file_paths and file["path"] not in paths_to_ignore:
+    if file["path"] not in file_paths and file["path"] not in paths_to_ignore and os.path.exists(file["path"]) and os.path.isfile(file["path"]):
       data["saved_files"].append(file)
       update_data(data)
+    else:
+      print("Could not add " + file["name"] + " to staging area")
 
 
 def add_all_files():
@@ -23,16 +32,17 @@ def add_all_files():
   data["saved_files"] = get_files(main_dir)
   data["saved_files"] = list(map(lambda file : { "path": file["path"], "relative_path": file["relative_path"], "name": file["name"] }, data["saved_files"]))
   update_data(data)
-  
-def help():
-  pass
 
-def branch(name):
-  # os.makedirs(os.path.join(main_dir, "vcs", "branches", name))
-  branches = os.listdir(os.path.join(main_dir, "vcs", "branches"))
-  if name not in branches:
-    data = load_data()
-    data["info"]["branches"].append(name)
+get_branches = lambda : os.listdir(os.path.join(main_dir, "vcs", "branches"))
+
+def create_branch(names):
+  data = load_data()
+  branches = get_branches()
+  for name in names:
+    if name.isalpha() and name not in branches:
+      os.makedirs(os.path.join(main_dir, "vcs", "branches", name))
+      data["info"]["branches"].append(name)
+  update_data(data)
     
 def init():
   reinit = False
@@ -47,7 +57,7 @@ def init():
   open(os.path.join(vcs_path, "data", "data.json"), "x")
   
   data = load_data()
-  data = { "saved_files": [], "info": { "branches": ["main"] } }
+  data = { "saved_files": [], "info": { "branches": ["main"], "current_branch": "main", "commits": [] } }
   update_data(data)
   
   if reinit: print("Project reinitialized") 
@@ -70,7 +80,13 @@ def main():
       add_files(args)
   elif cmd == "branch":
     if len(args) < 3:
-      branch("test")
+      print(get_branches())
+    else:
+      create_branch(args[2:])
+  elif cmd == "commit":
+    if not args[2]: return print("You have to specify name of the commit")
+    commit(args[2])
+    
 
 main()
 
