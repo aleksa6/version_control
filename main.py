@@ -5,7 +5,12 @@ from turtle import update
 
 from util import is_initialized, load_data, update_data, get_files, get_new_files, validate_args, format_file_data
 from variables import bcolors, main_dir, vcs_path, paths_to_ignore  
+<<<<<<< Updated upstream
   
+=======
+from commit import commit
+from log import flog, checkout
+>>>>>>> Stashed changes
 def status():
   pass
       
@@ -70,7 +75,17 @@ def main():
       add_files(args)
   elif cmd == "branch":
     if len(args) < 3:
+<<<<<<< Updated upstream
       branch("test")
+=======
+      log_branches()
+    else:
+      create_branch(args[2:])
+  elif cmd == "commit":
+    if not args[2]: return print("You have to specify name of the commit")
+    commit(args[2])
+  elif cmd == "log": flog()
+>>>>>>> Stashed changes
 
 main()
 
