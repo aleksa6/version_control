@@ -8,6 +8,10 @@ from variables import main_dir, vcs_path, data_dir
 
 def commit(name):
   data = load_data()
+  
+  if len(data["saved_files"]) < 1:
+    return print("there's nothing to commit")
+  
   branch = data["info"]["current_branch"]
   
   uid = uuid.uuid4().hex
@@ -26,7 +30,8 @@ def commit(name):
       
     shutil.copyfile(file["path"], copy_path)
     
-    files.append({ "real_path": file["path"], "copy_path": copy_path, "name": file["name"] })
+    files.append({ "real_path": file["path"], "copy_path": copy_path, "rel_path": file["relative_path"], "name": file["name"] })
 
   data["info"]["branches"][branch]["commits"].append({ "id": uid, "path": commit, "name": name, "files": files, "date": str(datetime.now().strftime("%d %b %Y %X")) })
+  data["saved_files"] = []
   update_data(data)

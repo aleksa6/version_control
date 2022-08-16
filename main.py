@@ -1,7 +1,10 @@
 import os
 import sys
 import shutil
+import random
 import filecmp
+from datetime import datetime
+import uuid
 
 from util import is_initialized, load_data, update_data, get_files, validate_args, format_file_data
 from variables import bcolors, main_dir, vcs_path, paths_to_ignore  
@@ -62,7 +65,7 @@ def log_branches():
   data = load_data()
   for branch in get_branches():
     if branch == data["info"]["current_branch"]:
-      print(bcolors.OKGREEN + branch + bcolors.ENDC)
+      print("*" + bcolors.OKGREEN + branch + bcolors.ENDC)
     else:
       print(branch)
 
@@ -71,9 +74,53 @@ def create_branch(names):
   branches = get_branches()
   for name in names:
     if name.isalpha() and name not in branches:
-      os.makedirs(os.path.join(main_dir, "vcs", "branches", name))
-      data["info"]["branches"].append(name)
+      os.makedirs(os.path.join(main_dir, "vcs", "branches", name, "commits"))
+      data["info"]["branches"][name] = { "commits": [] }
   update_data(data)
+  
+def checkout(name_of_branch):
+  data = load_data()
+  if not name_of_branch in data["info"]['branches']:
+    return print("Branch not found")
+  data["info"]["current_branch"] = name_of_branch
+  update_data(data)
+
+def merge(b1, b2 = "main"):
+  data = load_data()
+  b1commits = data["info"]["branches"][b1]["commits"]
+  b2commits = data["info"]["branches"][b2]["commits"]
+  
+  if len(b1commits) < 1 or len(b2commits) < 1:
+    return print("there are no commits in one of the branches you specified")
+  
+  commons = []
+  for i in range(len(b1commits[-1]["files"])):
+    file = b1commits[-1]["files"][i]
+    if file["real_path"] in [file["real_path"] for file in b2commits[-1]["files"]]:
+      rand = random.randint(0, 2)
+      if rand == 0:
+        commons.append([x for x in b2commits[-1]["files"] if x["real_path"] == file["real_path"]][0])  
+      else:
+        commons.append([x for x in b1commits[-1]["files"] if x["real_path"] == file["real_path"]][0])  
+
+  for file in commons:
+    if not os.path.exists(file["real_path"]):
+      os.makedirs(os.path.join(main_dir, file["rel_path"][:file["rel_path"].rfind("\\") + 1]))
+    shutil.copyfile(file["copy_path"], file["real_path"])
+
+  for file in b1commits[-1]["files"]:
+    if file["real_path"] not in [file["real_path"] for file in commons]:
+      dirr = file["real_path"][:file["real_path"].rfind("\\") + 1]
+      if not os.path.exists(dirr):
+        os.makedirs(dirr)
+      shutil.copyfile(file["copy_path"], file["real_path"])
+
+  for file in b2commits[-1]["files"]:
+    if file["real_path"] not in [file["real_path"] for file in commons]:
+      dirr = file["real_path"][:file["real_path"].rfind("\\") + 1]
+      if not os.path.exists(dirr):
+        os.makedirs(dirr)
+      shutil.copyfile(file["copy_path"], file["real_path"])
     
 def init():
   reinit = False
@@ -115,8 +162,14 @@ def main():
     else:
       create_branch(args[2:])
   elif cmd == "commit":
-    if not args[2]: return print("You have to specify name of the commit")
+    if len(args) < 3: return print("You have to specify name of the commit")
     commit(args[2])
+  elif cmd == "checkout":
+    if len(args) < 3:
+      return print("You have to specify name of the branch")
+    checkout(args[2])
+  elif cmd == "merge":
+    merge(args[2], args[3])
     
 
 main()
