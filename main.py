@@ -1,20 +1,34 @@
-from distutils.log import error
-from email.errors import MissingHeaderBodySeparatorDefect
 import os
 import sys
 import shutil
 import filecmp
 
-from util import is_initialized, load_data, update_data, get_files, get_new_files, validate_args, format_file_data
+from util import is_initialized, load_data, update_data, get_files, validate_args, format_file_data
 from variables import bcolors, main_dir, vcs_path, paths_to_ignore  
 from commit import commit
   
 def status():
   data = load_data()
+  branch = data["info"]["current_branch"]
   
-  commit = data["info"]["commits"][-1]
-  commons = [file for file in commit["files"]]
-  pass
+  commit = data["info"]["branches"][branch]["commits"][-1]
+  commons = [file["name"] for file in commit["files"]]
+  
+  for file in get_files(main_dir):
+    if file["name"] not in commons:
+      if file["path"] in [data["path"] for data in data["saved_files"]]:
+        print(bcolors.OKGREEN + "new file:        " + file["name"] + bcolors.ENDC)
+      else:
+        print(bcolors.FAIL + "untracked:        " + file["name"] + bcolors.ENDC)
+  
+  match, missmatch, errors = filecmp.cmpfiles(main_dir, commit["path"], commons)
+
+  for filename in match:
+    print(bcolors.OKGREEN + "up to date:    " + file["name"] + bcolors.ENDC)
+  for filename in missmatch:
+    print(bcolors.FAIL + "modified:         " + filename + bcolors.ENDC)
+  for filename in errors:
+    print(bcolors.FAIL + "deleted:          " + filename + bcolors.ENDC)
 
 def add_files(files):
   data = load_data()
@@ -34,6 +48,14 @@ def add_all_files():
   update_data(data)
 
 get_branches = lambda : os.listdir(os.path.join(main_dir, "vcs", "branches"))
+
+def log_branches():
+  data = load_data()
+  for branch in get_branches():
+    if branch == data["info"]["current_branch"]:
+      print(bcolors.OKGREEN + branch + bcolors.ENDC)
+    else:
+      print(branch)
 
 def create_branch(names):
   data = load_data()
@@ -57,7 +79,7 @@ def init():
   open(os.path.join(vcs_path, "data", "data.json"), "x")
   
   data = load_data()
-  data = { "saved_files": [], "info": { "branches": ["main"], "current_branch": "main", "commits": [] } }
+  data = { "saved_files": [], "info": { "branches": { "main": {"commits": [] } }, "current_branch": "main"  } }
   update_data(data)
   
   if reinit: print("Project reinitialized") 
@@ -80,7 +102,7 @@ def main():
       add_files(args)
   elif cmd == "branch":
     if len(args) < 3:
-      print(get_branches())
+      log_branches()
     else:
       create_branch(args[2:])
   elif cmd == "commit":
